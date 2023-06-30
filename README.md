@@ -70,3 +70,41 @@ where:
 *--keep-timestamp*: Use exported entry's timestamp as message timestamp instead of now (not recommended).
 
 NOTE: If you keep timestamp, due to kafka retention setting, messages might be deleted immediately.
+
+
+# Sample export payload
+
+All attributes are preserved including:
+
+1. Headers (header names, null values or actual values). Header values are represented by base64 encoded strings (byte array)
+2. Topic name
+3. Partition number
+4. Offset
+5. Key (keys are either null if they are not present, or base64 encoded byte arrays)
+6. Value (values are either null if they are not present, or base64 encoded byte arrays)
+7. Timestamp (timestamp typically is not used to import by default due to data retention issues)
+
+```json
+{
+  "headers": [
+    {
+      "Header-aqcolmv": null
+    },
+    {
+      "Header-vjlterlwhbqowocurcix": "d4WvtTpKqzAdhNEpTcUSItfKVV9PkwhvMDO1QawABrLU0pyVfV0DvqU5bfQ0p1WFm6E"
+    },
+    {
+      "Header-wuubvnwcnykxbsvvwrqd": "Re4Fg2J3WfqbuE7M24BViNDCbePdjvGfgqWk0vAp7mJD2T0D3pX/Fuqq7jxD7lO1V7s"
+    },
+    {
+      "Header-gjcqyemcllkp": "es34d7jS8VmBIQkFjkoXEAODf81PEZqVUVmvZWT16evJ+w2hnqpbIN8FdLzVkR0W+3I"
+    }
+  ],
+  "key": "b25lc3B5bHNxd3prLTA",
+  "offset": 0,
+  "partition": 0,
+  "timestamp": 1688095128392,
+  "topic": "def",
+  "value": "eyJuYW1lIjogIkN1c3RvbWVyLU5hbWUtMCIsICJlbWFpbCI6ICJDdXN0b21lci1FbWFpbC0wQGNvbmZsdWVudC5pbyJ9"
+}
+```
