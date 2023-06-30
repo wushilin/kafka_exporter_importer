@@ -25,9 +25,13 @@ Options:
 where:
 
 *COMMAND_CONFIG*: the client.properties file to use to connect to kafka
+
 *TOPIC*: The topic to export
+
 *OUT_FILE*: Output file (json)
+
 *THREADS*: Parallel threads
+
 *REPORT_INTERVAL*: Print progress after every *REPORT_INTERVAL* messages had been exported
 
 You can optionally set the log level of rdkafka by using *LOG_CONF*.
@@ -52,11 +56,17 @@ Options:
 where:
 
 *COMMAND_CONFIG*: the client.properties file to use to connect to kafka
+
 *TOPIC*: The topic to export
+
 *INPUT_FILE*: Input files (json). You can use wildcards like `/opt/my_export_files_*`
+
 *THREADS*: Parallel threads
+
 *REPORT_INTERVAL*: Print progress after every *REPORT_INTERVAL* messages had been exported
+
 *--random-partition*: Reshuffle all data to different partitions (not recommended)
+
 *--keep-timestamp*: Use exported entry's timestamp as message timestamp instead of now (not recommended).
 
 NOTE: If you keep timestamp, due to kafka retention setting, messages might be deleted immediately.
