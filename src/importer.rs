@@ -24,21 +24,21 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Parser, Debug, Clone)]
 pub struct CliArg {
-    #[arg(short, long, default_value_t=String::from("client.properties"))]
+    #[arg(short, long, default_value_t=String::from("client.properties"), help="your kafka client.properties")]
     pub command_config: String,
-    #[arg(short, long)]
+    #[arg(short, long, help="kakfa topic to import data into")]
     pub topic: String,
-    #[arg(short, long, default_value_t=String::from("rdkafka=warn"))]
+    #[arg(short, long, default_value_t=String::from("rdkafka=warn"), help="log level. (DEBUG|INFO|WARN|ERROR)")]
     pub log_conf: String,
-    #[arg(short, long, default_value_t=String::from("export.out*"))]
+    #[arg(short, long, default_value_t=String::from("export.out*"), help="file pattern to import (e.g. `/tmp/data*`)")]
     pub input_file: String,
-    #[arg(long, default_value_t=3000)]
+    #[arg(long, default_value_t=3000, help="report interval in message counts")]
     pub report_interval: u64,
-    #[arg(long, default_value_t=false)]
+    #[arg(long, default_value_t=false, help="use when old and new topic partition count is different")]
     pub random_partition: bool,
-    #[arg(long, default_value_t=false)]
+    #[arg(long, default_value_t=false, help="keep original timestamp(not recommended)")]
     pub keep_timestamp : bool,
-    #[arg(long, default_value_t=20)]
+    #[arg(long, default_value_t=20, help="use multi threading. max is the partition/file count")]
     pub threads: usize,
 }
 

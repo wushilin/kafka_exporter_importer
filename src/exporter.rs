@@ -20,17 +20,17 @@ pub mod util;
 
 #[derive(Parser, Debug, Clone)]
 pub struct CliArg {
-    #[arg(short, long, default_value_t=String::from("client.properties"))]
+    #[arg(short, long, default_value_t=String::from("client.properties"), help="your kafka client.properties")]
     pub command_config: String,
-    #[arg(short, long)]
+    #[arg(short, long, help="topic name to export")]
     pub topic: String,
-    #[arg(short, long, default_value_t=String::from("rdkafka=warn"))]
+    #[arg(short, long, default_value_t=String::from("rdkafka=warn"), help="log level (DEBUG|INFO|WARN|ERROR)")]
     pub log_conf: String,
-    #[arg(short, long, default_value_t=String::from("export.out"))]
+    #[arg(short, long, default_value_t=String::from("export.out"), help="file prefix. `_partition_x` suffix might be added")]
     pub out_file: String,
-    #[arg(long, default_value_t=20)]
+    #[arg(long, default_value_t=20, help="number of threads to use")]
     pub threads: usize,
-    #[arg(long, default_value_t=3000)]
+    #[arg(long, default_value_t=3000, help="reporting interval for number of records exporterd")]
     pub report_interval: u64,
 }
 
