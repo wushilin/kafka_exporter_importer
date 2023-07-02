@@ -1,18 +1,16 @@
 use rdkafka::config::ClientConfig;
-use rdkafka::consumer::{Consumer, BaseConsumer};
-use rdkafka::util::{Timeout};
-use std::time::{Duration};
+use rdkafka::consumer::{BaseConsumer, Consumer};
+use rdkafka::util::Timeout;
+use std::time::Duration;
 
-pub fn get_topic_partition_count(config:&mut ClientConfig, topic_name: &str) ->Option<i32> {
-    let consumer: BaseConsumer = config
-    .create()
-    .expect("Consumer creation error");
-    
+pub fn get_topic_partition_count(config: &mut ClientConfig, topic_name: &str) -> Option<i32> {
+    let consumer: BaseConsumer = config.create().expect("Consumer creation error");
+
     let topic_meta = consumer
         .fetch_metadata(Some(topic_name), Timeout::After(Duration::from_secs(5)))
         .expect("Failed to retrieve topic metadata after 20 seconds");
 
-    if topic_meta.topics().len()== 0 {
+    if topic_meta.topics().len() == 0 {
         panic!("Topic {topic_name} not found");
     }
 
@@ -23,5 +21,5 @@ pub fn get_topic_partition_count(config:&mut ClientConfig, topic_name: &str) ->O
         }
     }
 
-    return None
+    return None;
 }

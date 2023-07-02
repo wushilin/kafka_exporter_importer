@@ -1,20 +1,20 @@
-use log::{info, debug};
+use log::{debug, info};
 
 pub mod cliutil;
 pub mod logutil;
 use clap::Parser;
-use rdkafka::{Message};
-use rdkafka::config::ClientConfig;
-use rdkafka::message::{Headers, BorrowedMessage};
-use rdkafka::util::get_rdkafka_version;
-use rdkafka::util::{Timeout};
 use logutil::setup_logger;
-use rdkafka::consumer::{Consumer, BaseConsumer};
-use rdkafka::topic_partition_list::{TopicPartitionList, Offset};
+use rdkafka::config::ClientConfig;
+use rdkafka::consumer::{BaseConsumer, Consumer};
+use rdkafka::message::{BorrowedMessage, Headers};
+use rdkafka::topic_partition_list::{Offset, TopicPartitionList};
+use rdkafka::util::get_rdkafka_version;
+use rdkafka::util::Timeout;
+use rdkafka::Message;
+use serde_json::{json, Map, Value};
 use std::io::Write;
-use std::time::{Duration};
-use serde_json::{Value, json, Map};
 use std::sync::mpsc::channel;
+use std::time::Duration;
 
 pub mod util;
 
@@ -22,15 +22,19 @@ pub mod util;
 pub struct CliArg {
     #[arg(short, long, default_value_t=String::from("client.properties"), help="your kafka client.properties")]
     pub command_config: String,
-    #[arg(short, long, help="topic name to export")]
+    #[arg(short, long, help = "topic name to export")]
     pub topic: String,
     #[arg(short, long, default_value_t=String::from("rdkafka=warn"), help="log level (DEBUG|INFO|WARN|ERROR)")]
     pub log_conf: String,
     #[arg(short, long, default_value_t=String::from("export.out"), help="file prefix. `_partition_x` suffix might be added")]
     pub out_file: String,
-    #[arg(long, default_value_t=20, help="number of threads to use")]
+    #[arg(long, default_value_t = 20, help = "number of threads to use")]
     pub threads: usize,
-    #[arg(long, default_value_t=3000, help="reporting interval for number of records exporterd")]
+    #[arg(
+        long,
+        default_value_t = 3000,
+        help = "reporting interval for number of records exporterd"
+    )]
     pub report_interval: u64,
 }
 
@@ -51,15 +55,22 @@ async fn main() {
     run_export(&mut config, &topic, &out_file, threads, report_interval);
 }
 
-fn run_export_partition(config: ClientConfig, topic_name:&str, partition:i32, out_file:&str, 
-    report_interval: u64) -> (usize, usize){
-    let consumer: BaseConsumer = config
-    .create()
-    .expect("Consumer creation error");
+fn run_export_partition(
+    config: ClientConfig,
+    topic_name: &str,
+    partition: i32,
+    out_file: &str,
+    report_interval: u64,
+) -> (usize, usize) {
+    let consumer: BaseConsumer = config.create().expect("Consumer creation error");
     let mut assignment = TopicPartitionList::new();
-    assignment.add_partition_offset(topic_name, partition, Offset::Beginning).unwrap();
-    consumer.assign(&assignment).expect("Failed to assign partitions");
-    debug!( "Successfully assigned to partition {partition}  for {topic_name}");
+    assignment
+        .add_partition_offset(topic_name, partition, Offset::Beginning)
+        .unwrap();
+    consumer
+        .assign(&assignment)
+        .expect("Failed to assign partitions");
+    debug!("Successfully assigned to partition {partition}  for {topic_name}");
 
     let file = std::fs::File::create(out_file);
     if let Err(cause) = file {
@@ -81,19 +92,22 @@ fn run_export_partition(config: ClientConfig, topic_name:&str, partition:i32, ou
                         let json = encode_json(&real_message);
                         let json_bytes = json.as_bytes();
                         file.write_all(json_bytes).expect("File write failure");
-                        file.write_all("\r\n".as_bytes()).expect("File write failure (newline)");
+                        file.write_all("\r\n".as_bytes())
+                            .expect("File write failure (newline)");
                         bytes_count += json_bytes.len() as u64 + 2;
                         if message_count % report_interval == 0 {
-                            info!("File `{out_file}` {message_count} messages, {bytes_count} bytes.");
+                            info!(
+                                "File `{out_file}` {message_count} messages, {bytes_count} bytes."
+                            );
                         }
-                    },
+                    }
                     Err(cause) => {
                         panic!("Kafka Error: {cause:#?}");
                     }
                 }
-            },
-            None =>{
-                eol_count+=1;
+            }
+            None => {
+                eol_count += 1;
                 if eol_count > 3 {
                     break;
                 }
@@ -106,21 +120,21 @@ fn run_export_partition(config: ClientConfig, topic_name:&str, partition:i32, ou
     file.flush().expect("Can't flush file");
     debug!("Partition {partition} done");
     return (message_count as usize, bytes_count as usize);
-
 }
-fn run_export(config: &mut ClientConfig, topic_name: &str, 
-    out_file:&str, threads: usize, report_interval:u64
+fn run_export(
+    config: &mut ClientConfig,
+    topic_name: &str,
+    out_file: &str,
+    threads: usize,
+    report_interval: u64,
 ) {
-    let consumer: BaseConsumer = config
-    .create()
-    .expect("Consumer creation error");
-    
+    let consumer: BaseConsumer = config.create().expect("Consumer creation error");
+
     let topic_meta = consumer
         .fetch_metadata(Some(topic_name), Timeout::After(Duration::from_secs(5)))
         .expect("Failed to retrieve topic metadata after 20 seconds");
 
-
-    if topic_meta.topics().len()== 0 {
+    if topic_meta.topics().len() == 0 {
         info!("Topic {topic_name} not found");
     }
 
@@ -157,22 +171,27 @@ fn run_export(config: &mut ClientConfig, topic_name: &str,
         let tx = tx.clone();
         let tid = p;
         pool.execute(move || {
-            let (msgs, bytes) = run_export_partition(new_config, &new_topic_name, p, 
-                &thread_out_file, report_interval);
+            let (msgs, bytes) = run_export_partition(
+                new_config,
+                &new_topic_name,
+                p,
+                &thread_out_file,
+                report_interval,
+            );
             tx.send((tid, msgs, bytes)).unwrap();
         });
     }
 
     let mut done_count = 0;
-    let mut final_msg_count:usize = 0;
-    let mut final_bytes:usize = 0;
+    let mut final_msg_count: usize = 0;
+    let mut final_bytes: usize = 0;
 
     for _ in 0..partition_count {
         // Check exported messages and total bytes
         let (_, msgs, bytes) = rx.recv().unwrap();
         final_msg_count += msgs;
         final_bytes += bytes;
-        done_count+=1;
+        done_count += 1;
     }
     info!("{done_count}/{done_count} tasks done!");
     pool.join();
@@ -184,23 +203,21 @@ fn value_for_bytes(input: Option<&[u8]>) -> Value {
         Some(data) => {
             let str = util::base64_encode(data);
             return Value::String(str);
-        },
-        None => {
-            Value::Null
         }
+        None => Value::Null,
     }
 }
 
-fn encode_json(message:&BorrowedMessage) -> String {
+fn encode_json(message: &BorrowedMessage) -> String {
     let headers_o = message.headers();
-    let mut header_vec:Vec<Value> = vec!();
+    let mut header_vec: Vec<Value> = vec![];
     if let Some(headers) = headers_o {
         let total = headers.count();
         for index in 0..total {
             let next_header = headers.get(index);
             let key = String::from(next_header.key);
             let value = next_header.value;
-            let mut next_hm:Map<String, Value> = Map::new();
+            let mut next_hm: Map<String, Value> = Map::new();
             next_hm.insert(key, value_for_bytes(value));
             header_vec.push(Value::Object(next_hm));
         }
@@ -220,5 +237,5 @@ fn encode_json(message:&BorrowedMessage) -> String {
         "timestamp": timestamp.to_millis().unwrap_or(-1),
         "headers":header_vec,
     });
-    return j.to_string()
+    return j.to_string();
 }

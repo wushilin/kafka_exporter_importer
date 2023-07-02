@@ -2,10 +2,10 @@ use log::{info, warn};
 
 pub mod cliutil;
 use clap::Parser;
-use rdkafka::Message;
 use rdkafka::config::ClientConfig;
 use rdkafka::message::Headers;
 use rdkafka::util::get_rdkafka_version;
+use rdkafka::Message;
 
 use crate::logutil::setup_logger;
 use rdkafka::client::ClientContext;
@@ -59,13 +59,12 @@ async fn main() {
     consume(&mut config, &topic).await;
 }
 
-
 async fn consume(config: &mut ClientConfig, topic_name: &String) {
     let context = CustomContext;
     let consumer: LoggingConsumer = config
-    .create_with_context(context)
-    .expect("Consumer creation error");
-    let topics_ve = vec!(topic_name.as_str());
+        .create_with_context(context)
+        .expect("Consumer creation error");
+    let topics_ve = vec![topic_name.as_str()];
     consumer
         .subscribe(&topics_ve)
         .expect("Can't subscribe to specified topics");
@@ -90,15 +89,22 @@ async fn consume(config: &mut ClientConfig, topic_name: &String) {
                     for header in headers.iter() {
                         match header.value {
                             Some(bs) => {
-                                info!("  Header {:#?}: {:?}", header.key, std::str::from_utf8(bs).expect("Can't convert header as string"));
-                            }, 
+                                info!(
+                                    "  Header {:#?}: {:?}",
+                                    header.key,
+                                    std::str::from_utf8(bs)
+                                        .expect("Can't convert header as string")
+                                );
+                            }
                             None => {
                                 info!("  Header {:#?}: None", header.key);
                             }
                         }
                     }
                 }
-                consumer.store_offset(m.topic(), m.partition(), m.offset()).unwrap();
+                consumer
+                    .store_offset(m.topic(), m.partition(), m.offset())
+                    .unwrap();
                 //consumer.commit_message(&m, CommitMode::Async).unwrap();
             }
         };
