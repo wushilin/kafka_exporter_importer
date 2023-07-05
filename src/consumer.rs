@@ -7,7 +7,7 @@ use rdkafka::message::Headers;
 use rdkafka::util::get_rdkafka_version;
 use rdkafka::Message;
 
-use crate::logutil::setup_logger;
+use logutil::setup_logger;
 use rdkafka::client::ClientContext;
 use rdkafka::consumer::stream_consumer::StreamConsumer;
 

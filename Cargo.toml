@@ -1,5 +1,5 @@
 [package]
-name = "rust-rdkafka"
+name = "kafka-exporter-importer"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 rdkafka = { version = "0.32.2", features = ["cmake-build"] }
 
-tokio = { version = "1.28.2", features = ["full"] }
+tokio = { version = "1.28.2", features = ["full", "rt"] }
 log = "0.4.19"
 rand = "0.8.5"
 regex = "1.8.4"
@@ -23,6 +23,16 @@ base64 = "0.21.2"
 serde_json = "1.0.99"
 threadpool = "1.8.1"
 glob = "0.3.1"
+hyper = { version =  "0.14.27", features = ["full"] }
+http = "0.2"
+http-body = "=1.0.0-rc.2"
+http-body-util = { version = "=0.1.0-rc.2", optional = true }
+httpdate = "1.0"
+httparse = "1.8"
+hyper-rustls = "0.24.1"
+rustls = "0.21.2"
+rustls-pemfile = "1.0.3"
+rustls-native-certs = "0.6.3"
 
 [[bin]]
 name = "producer"
