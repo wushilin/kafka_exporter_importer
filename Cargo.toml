@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rdkafka = { version = "0.32.2", features = ["cmake-build"] }
+rdkafka = { version = "0.32.2", features = ["cmake-build", "ssl-vendored"] }
 
 tokio = { version = "1.28.2", features = ["full", "rt"] }
 log = "0.4.19"
@@ -33,6 +33,8 @@ hyper-rustls = "0.24.1"
 rustls = "0.21.2"
 rustls-pemfile = "1.0.3"
 rustls-native-certs = "0.6.3"
+lazy_static = "1.4.0"
+
 
 [[bin]]
 name = "producer"
@@ -54,3 +56,7 @@ path="src/importer.rs"
 [[bin]]
 name="test"
 path="src/test.rs"
+
+[[bin]]
+name="test2"
+path="src/test2.rs"

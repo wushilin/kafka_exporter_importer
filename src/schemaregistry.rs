@@ -1,5 +1,3 @@
-use super::errors;
-use super::errors::GeneralError;
 use super::util;
 use http::{HeaderValue, Request};
 use hyper::body::Body;
@@ -16,6 +14,9 @@ use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::str::FromStr;
+
+use super::errors;
+use super::errors::GeneralError;
 
 #[derive(Clone, Debug)]
 pub struct BasicAuthCredential {
@@ -63,7 +64,7 @@ impl SrConfig {
         return self.trust_system_certs;
     }
 
-    pub fn from_map(map: HashMap<String, String>) -> Result<SrConfig, Box<dyn Error>> {
+    pub fn from_map(map: &HashMap<String, String>) -> Result<SrConfig, Box<dyn Error>> {
         let sr_url = map.get("schema.registry.url");
         match sr_url {
             None => {
@@ -164,14 +165,54 @@ impl SrConfig {
     }
 }
 
+
 pub struct SrClient {
     client: hyper::Client<HttpsConnector<HttpConnector>, Body>,
     sr_config: SrConfig,
     cache: HashMap<i32, String>,
 }
 
+// Clone copies the config, creates new HttpClient and copy the cache as well
+impl Clone for SrClient {
+    fn clone(&self) -> SrClient {
+        let new_config = self.sr_config.clone();
+        let result = SrClient {
+                client: Client::builder().build(SrClient::build_connector(&new_config).unwrap()),
+                sr_config: new_config,
+                cache: self.cache.clone(),
+        };
+        return result;
+    }
+}
 impl SrClient {
-    pub fn from_map(map: HashMap<String, String>) -> Result<SrClient, Box<dyn Error>> {
+    pub fn cache_count(&self) -> usize {
+        return self.cache.len();
+    }
+
+    pub fn has_cache_for_schema_id(&self, id:i32) -> bool {
+        return self.cache.get(&id).is_some();
+    }
+
+    pub fn remove_schema_id_from_cache(&mut self, id:i32) -> Option<String> {
+        return self.cache.remove(&id);
+    }
+
+    pub fn clear_cache(&mut self) -> usize {
+        let size = self.cache.len();
+        self.cache.clear();
+        return size;
+    }
+
+    pub fn copy_cache(&self, to:&mut HashMap<i32, String>) -> usize {
+        for (k, v) in self.cache.iter() {
+            let new_key = *k;
+            let new_v = v.clone();
+            to.insert(new_key, new_v);
+        }
+        return to.len();
+    }
+
+    pub fn from_map(map: &HashMap<String, String>) -> Result<SrClient, Box<dyn Error>> {
         let config = SrConfig::from_map(map)?;
         return Self::from_config(config);
     }

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GeneralError {
     msg: String,
 }
@@ -12,6 +12,10 @@ impl std::fmt::Display for GeneralError {
 }
 
 impl GeneralError {
+    pub fn from_string(msg:String) -> GeneralError {
+        return GeneralError{ msg };
+    }
+    
     pub fn wrap(msg: &str) -> GeneralError {
         return GeneralError { msg: String::from(msg) };
     }
