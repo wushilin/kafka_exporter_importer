@@ -13,13 +13,22 @@ $ target/release/exporter --help
 Usage: exporter [OPTIONS] --topic <TOPIC>
 
 Options:
-  -c, --command-config <COMMAND_CONFIG>    [default: client.properties]
-  -t, --topic <TOPIC>                      
-  -l, --log-conf <LOG_CONF>                [default: rdkafka=warn]
-  -o, --out-file <OUT_FILE>                [default: export.out]
-      --threads <THREADS>                  [default: 20]
-      --report-interval <REPORT_INTERVAL>  [default: 3000]
-  -h, --help                               Print help
+  -c, --command-config <COMMAND_CONFIG>
+          your kafka client.properties [default: client.properties]
+  -t, --topic <TOPIC>
+          topic name to export
+  -l, --log-conf <LOG_CONF>
+          log level (DEBUG|INFO|WARN|ERROR) [default: rdkafka=warn]
+  -o, --out-file <OUT_FILE>
+          file prefix. `_partition_x` suffix might be added [default: export.out]
+      --report-interval <REPORT_INTERVAL>
+          reporting interval for number of records exporterd [default: 3000]
+      --schemas-out <SCHEMAS_OUT>
+          schema export file [default: ]
+      --skip-invalid-schema
+          skip records with invalid schema id
+  -h, --help
+          Print help
 ```
 
 where:
@@ -34,6 +43,7 @@ where:
 
 *REPORT_INTERVAL*: Print progress after every *REPORT_INTERVAL* messages had been exported
 
+*SCHEMAS_OUT*: Write out the associated schemas from the source schema registry.
 You can optionally set the log level of rdkafka by using *LOG_CONF*.
 
 # To import data
@@ -42,15 +52,26 @@ $ target/release/importer --help
 Usage: importer [OPTIONS] --topic <TOPIC>
 
 Options:
-  -c, --command-config <COMMAND_CONFIG>    [default: client.properties]
-  -t, --topic <TOPIC>                      
-  -l, --log-conf <LOG_CONF>                [default: rdkafka=warn]
-  -i, --input-file <INPUT_FILE>            [default: export.out*]
-      --report-interval <REPORT_INTERVAL>  [default: 3000]
-      --random-partition                   
-      --keep-timestamp                     
-      --threads <THREADS>                  [default: 20]
-  -h, --help                               Print help
+  -c, --command-config <COMMAND_CONFIG>
+          your kafka client.properties [default: client.properties]
+  -t, --topic <TOPIC>
+          kakfa topic to import data into
+  -l, --log-conf <LOG_CONF>
+          log level. (DEBUG|INFO|WARN|ERROR) [default: rdkafka=warn]
+  -i, --input-file <INPUT_FILE>
+          file pattern to import (e.g. `/tmp/data*`) [default: export.out*]
+      --report-interval <REPORT_INTERVAL>
+          report interval in message counts [default: 3000]
+      --random-partition
+          use when old and new topic partition count is different
+      --keep-timestamp
+          keep original timestamp(not recommended)
+      --threads <THREADS>
+          use multi threading. max is the partition/file count [default: 20]
+      --schemas-in <SCHEMAS_IN>
+          also import schema and do schema conversion [default: ]
+  -h, --help
+          Print help
 ```
 
 where:
