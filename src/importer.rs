@@ -427,10 +427,10 @@ fn run_import(
             error!("Failed to flush after 10 seconds!");
             break;
         }
-        let flush_result = producer.flush(Duration::from_secs(1));
+        let flush_result = producer.flush(Duration::from_millis(5000));
         match flush_result {
-            Err(cause) => {
-                info!("Waiting for messages to flush. {cause:#?}");
+            Err(_) => {
+                info!("Waiting for messages to flush...(`{file_name}`)");
             },
             Ok(_) => {
                 break;

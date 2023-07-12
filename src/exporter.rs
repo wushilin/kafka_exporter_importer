@@ -117,6 +117,7 @@ async fn run_export_partition(
     let local_sr_client = sr_client;
     let consumer: BaseConsumer = config.create().expect("Consumer creation error");
     let mut assignment = TopicPartitionList::new();
+    let mut not_found_ids = HashMap::<i32, bool>::new();
     assignment
         .add_partition_offset(topic_name, partition, Offset::Beginning)
         .unwrap();
@@ -143,6 +144,27 @@ async fn run_export_partition(
                         if enable_schema_export {
                             let schema_id_key = util::get_schema_id(message_key);
                             let schema_id_value = util::get_schema_id(message_value);
+                            if schema_id_key.is_some() {
+                                let schema_id_key = schema_id_key.unwrap();
+                                if not_found_ids.contains_key(&schema_id_key) {
+                                    // not found continue
+                                    if skip_invalid_schema {
+                                        tokio::task::yield_now().await;
+                                        continue;
+                                    }
+                                }
+                            }
+                            if schema_id_value.is_some() {
+                                let schema_id_value = schema_id_value.unwrap();
+                                if not_found_ids.contains_key(&schema_id_value) {
+                                    // not found continue
+                                    if skip_invalid_schema {
+                                        tokio::task::yield_now().await;
+                                        continue;
+                                    }
+                                }
+                            }
+
                             //
                             if let Some(schema_id) = schema_id_key {
                                 if !sr_cache_key.contains_key(&schema_id) {
@@ -152,6 +174,7 @@ async fn run_export_partition(
                                     if let Some(sr_opt) = sr_opt_locked {
                                         let schema_r = sr_opt.get_schema_by_id(schema_id).await;
                                         if skip_invalid_schema && schema_r.is_err() {
+                                            not_found_ids.insert(schema_id, true);
                                             continue;
                                         }
                                         let schema_r = schema_r?;
@@ -169,6 +192,7 @@ async fn run_export_partition(
                                     if let Some(sr_opt) = sr_opt_locked {
                                         let schema_r = sr_opt.get_schema_by_id(schema_id).await;
                                         if skip_invalid_schema && schema_r.is_err() {
+                                            not_found_ids.insert(schema_id, true);
                                             continue;
                                         }
                                         let schema_r = schema_r?;
