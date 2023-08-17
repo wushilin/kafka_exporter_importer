@@ -14,3 +14,4 @@ Cargo.lock
 *.pdb
 secure/
 *.log
+export.out*
